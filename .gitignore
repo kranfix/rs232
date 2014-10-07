@@ -1,0 +1,13 @@
+# Compiled object files
+*.[oa]
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Build Directory
+./.build
+
+# Qt-crator project
+*.pro*
