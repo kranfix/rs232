@@ -43,16 +43,17 @@ class RS232
     char devname[13];   // Device Name
     int baudr, port;    // Baudrate and Port Number
     bool available = false;
-    struct termios old_port_settings;
+    struct termios ops; // old port settings
 public:
     RS232();
     int IsAvailable() { return available; }
+    int Read(unsigned char);
     int Read(unsigned char *, int);
     int Write(unsigned char);
     int Write(unsigned char *, int);
     void Print(const char *);
     void Close();
-    int IsCTSEnabled(int);
+    int IsCTSEnabled();
 };
 
 }
@@ -63,6 +64,7 @@ public:
 typedef struct __kfx_RS232 {
     char name[13];
     int baudr, port; // Baudrate and Port Number
+    struct termios ops;
 } kfx_RS232;
 
 int kfx_rs232_init(kfx_RS232 *, int);
