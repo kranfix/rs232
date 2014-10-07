@@ -15,133 +15,108 @@
 
 #include "rs232.h"
 
-int Cport[22],
-    error;
+static int error;
+static struct termios nps;
 
-struct termios nps; // new port settings // Must it be static?
-
-char comports[22][13] = {"/dev/ttyACM0", \
-    "/dev/ttyS1", "/dev/ttyS2", "/dev/ttyS3", \
-    "/dev/ttyS4", "/dev/ttyS5", "/dev/ttyS6", \
-    "/dev/ttyS7", "/dev/ttyS8", "/dev/ttyS9", \
-  "/dev/ttyS10", "/dev/ttyS11", "/dev/ttyS12", \
-  "/dev/ttyS13", "/dev/ttyS14", "/dev/ttyS15", \
-"/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2",\
-"/dev/ttyUSB3", "/dev/ttyUSB4", "/dev/ttyUSB5"};
-
-
-
-int OpenComport(int comport_number, int baudrate)
+int kfx_RS232_Init(RS232 * h, char const * dev_name, int baudrate) //(int comport_number, int baudrate)
 {
-  int baudr;
+    // asigninn device name
+    strcpy(h->devname,dev_name);
 
-  if((comport_number>21)||(comport_number<0))
-  {
-    printf("illegal comport number\n");
-    return(1);
-  }
+    // Chossing baudrate
+    switch(baudrate)
+    {
+      case      50 : h->baudr = B50;       break;
+      case      75 : h->baudr = B75;       break;
+      case     110 : h->baudr = B110;      break;
+      case     134 : h->baudr = B134;      break;
+      case     150 : h->baudr = B150;      break;
+      case     200 : h->baudr = B200;      break;
+      case     300 : h->baudr = B300;      break;
+      case     600 : h->baudr = B600;      break;
+      case    1200 : h->baudr = B1200;     break;
+      case    1800 : h->baudr = B1800;     break;
+      case    2400 : h->baudr = B2400;     break;
+      case    4800 : h->baudr = B4800;     break;
+      case    9600 : h->baudr = B9600;     break;
+      case   19200 : h->baudr = B19200;    break;
+      case   38400 : h->baudr = B38400;    break;
+      case   57600 : h->baudr = B57600;    break;
+      case  115200 : h->baudr = B115200;   break;
+      case  230400 : h->baudr = B230400;   break;
+      case  460800 : h->baudr = B460800;   break;
+      case  500000 : h->baudr = B500000;   break;
+      case  576000 : h->baudr = B576000;   break;
+      case  921600 : h->baudr = B921600;   break;
+      case 1000000 : h->baudr = B1000000;  break;
+      default      : printf("invalid baudrate\n");
+                     return;
+    }
 
-  switch(baudrate)
-  {
-    case      50 : baudr = B50;         break;
-    case      75 : baudr = B75;         break;
-    case     110 : baudr = B110;        break;
-    case     134 : baudr = B134;        break;
-    case     150 : baudr = B150;        break;
-    case     200 : baudr = B200;        break;
-    case     300 : baudr = B300;        break;
-    case     600 : baudr = B600;        break;
-    case    1200 : baudr = B1200;       break;
-    case    1800 : baudr = B1800;       break;
-    case    2400 : baudr = B2400;       break;
-    case    4800 : baudr = B4800;       break;
-    case    9600 : baudr = B9600;       break;
-    case   19200 : baudr = B19200;      break;
-    case   38400 : baudr = B38400;      break;
-    case   57600 : baudr = B57600;      break;
-    case  115200 : baudr = B115200;     break;
-    case  230400 : baudr = B230400;     break;
-    case  460800 : baudr = B460800;     break;
-    case  500000 : baudr = B500000;     break;
-    case  576000 : baudr = B576000;     break;
-    case  921600 : baudr = B921600;     break;
-    case 1000000 : baudr = B1000000;    break;
-    default      : printf("invalid baudrate\n");
-                   return(1);
-                   break;
-  }
+    h->port = open(h->devname, O_RDWR | O_NOCTTY | O_NDELAY);
+    if(port == -1)
+    {
+      perror("unable to open comport ");
+      return;
+    }
 
-  Cport[comport_number] = open(comports[comport_number], O_RDWR | O_NOCTTY | O_NDELAY);
-  if(Cport[comport_number]==-1)
-  {
-    perror("unable to open comport ");
-    return(1);
-  }
+    error = tcgetattr(h->port, &(h->ops) );
+    if(error == -1)
+    {
+      close(h->port);
+      perror("unable to read portsettings ");
+      return;
+    }
+    memset(&nps, 0, sizeof(nps));  /* clear the new struct */
 
-  error = tcgetattr(Cport[comport_number], old_port_settings + comport_number);
-  if(error==-1)
-  {
-    close(Cport[comport_number]);
-    perror("unable to read portsettings ");
-    return(1);
-  }
-  memset(&new_port_settings, 0, sizeof(new_port_settings));  /* clear the new struct */
+    nps.c_cflag = baudr | CS8 | CLOCAL | CREAD;
+    nps.c_iflag = IGNPAR;
+    nps.c_oflag = 0;
+    nps.c_lflag = 0;
+    nps.c_cc[VMIN] = 0;      /* block untill n bytes are received */
+    nps.c_cc[VTIME] = 0;     /* block untill a timer expires (n * 100 mSec.) */
+    error = tcsetattr(h->port, TCSANOW, &nps);
+    if(error == -1)
+    {
+      close(h->port);
+      perror("unable to adjust portsettings ");
+      return;
+    }
 
-  new_port_settings.c_cflag = baudr | CS8 | CLOCAL | CREAD;
-  new_port_settings.c_iflag = IGNPAR;
-  new_port_settings.c_oflag = 0;
-  new_port_settings.c_lflag = 0;
-  new_port_settings.c_cc[VMIN] = 0;      /* block untill n bytes are received */
-  new_port_settings.c_cc[VTIME] = 0;     /* block untill a timer expires (n * 100 mSec.) */
-  error = tcsetattr(Cport[comport_number], TCSANOW, &new_port_settings);
-  if(error==-1)
-  {
-    close(Cport[comport_number]);
-    perror("unable to adjust portsettings ");
-    return(1);
-  }
-
-  return(0);
+    h->available = true;
 }
 
-
-int kfx_rs232_Read(int comport_number, unsigned char *buf, int size)
+int kfx_RS232_ReadBuf(kfx_RS232 * h, unsigned char byte)
 {
-  int n;
+  return read(h->port, &byte, 1);
+}
 
+int kfx_RS232_ReadBuf(kfx_RS232 * h, unsigned char *buf, int size)
+{
 #ifndef __STRICT_ANSI__                       /* __STRICT_ANSI__ is defined when the -ansi option is used for gcc */
-  if(size>SSIZE_MAX)  size = (int)SSIZE_MAX;  /* SSIZE_MAX is defined in limits.h */
+  if(size > SSIZE_MAX)  size = (int)SSIZE_MAX;  /* SSIZE_MAX is defined in limits.h */
 #else
   if(size>4096)  size = 4096;
 #endif
 
-  n = read(Cport[comport_number], buf, size);
+  return read(h->port, buf, size);
+}
 
-  return(n);
+int kfx_RS232_WriteByte(kfx_RS232 * h, unsigned char byte)
+{
+  return write(h->port, &byte, 1);
 }
 
 
-int SendByte(int comport_number, unsigned char byte)
+int kfx_RS232_WriteBuf(kfx_RS232 * h, unsigned char *buf, int size)
 {
-  int n;
-
-  n = write(Cport[comport_number], &byte, 1);
-  if(n<0)  return(1);
-
-  return(0);
+  return write(h->port, buf, size);
 }
 
-
-int SendBuf(int comport_number, unsigned char *buf, int size)
+void kfx_RS232_Close(kfx_RS232 * h)
 {
-  return write(Cport[comport_number], buf, size);
-}
-
-
-void CloseComport(int comport_number)
-{
-  close(Cport[comport_number]);
-  tcsetattr(Cport[comport_number], TCSANOW, old_port_settings + comport_number);
+  close(h->port);
+  tcsetattr(h->port, TCSANOW, &(h->ops) );
 }
 
 /*
@@ -159,15 +134,11 @@ TIOCM_RI  Synonym for TIOCM_RNG
 TIOCM_DSR DSR (data set ready)
 */
 
-int IsCTSEnabled(int comport_number)
+int kfx_RS232_IsCTSEnabled(kfx_RS232 * h)
 {
   int status;
-
-  status = ioctl(Cport[comport_number], TIOCMGET, &status);
-
-  if(status & TIOCM_CTS) return(1);
-  return(0);
+  status = ioctl(h->port, TIOCMGET, &status);
+  return (status & TIOCM_CTS)? 1 : 0;
 }
-
 
 #endif // RS232_LINUX_C

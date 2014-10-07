@@ -1,20 +1,22 @@
+﻿/*
+***********************************************
+*
+* Author: Frank Andre Moreno Vera
+*
+* Copyright (C) 2014 Frank Andre Moreno Vera
+*
+* frankmoreno1993@gmail.com
+*
+***********************************************
+*/
+
 #ifndef RS232_LINUX_CPP
 #define RS232_LINUX_CPP
 
 #include "rs232.h"
 
-int error;
-
-struct termios nps;
-
-char comports[22][13] = {"/dev/ttyACM0", \
-    "/dev/ttyS1", "/dev/ttyS2", "/dev/ttyS3", \
-    "/dev/ttyS4", "/dev/ttyS5", "/dev/ttyS6", \
-    "/dev/ttyS7", "/dev/ttyS8", "/dev/ttyS9", \
-  "/dev/ttyS10", "/dev/ttyS11", "/dev/ttyS12", \
-  "/dev/ttyS13", "/dev/ttyS14", "/dev/ttyS15", \
-"/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2",\
-"/dev/ttyUSB3", "/dev/ttyUSB4", "/dev/ttyUSB5"};
+static int error;
+static struct termios nps;
 
 kfx::RS232::RS232(char * dev_name, int baudrate)
 {
@@ -84,7 +86,6 @@ kfx::RS232::RS232(char * dev_name, int baudrate)
   available = true;
 }
 
-
 int kfx::RS232::Read(unsigned char byte)
 {
   return read(port, &byte, 1);
@@ -93,7 +94,7 @@ int kfx::RS232::Read(unsigned char byte)
 int kfx::RS232::Read(unsigned char *buf, int size)
 {
 #ifndef __STRICT_ANSI__                       /* __STRICT_ANSI__ is defined when the -ansi option is used for gcc */
-  if(size>SSIZE_MAX)  size = (int)SSIZE_MAX;  /* SSIZE_MAX is defined in limits.h */
+  if(size > SSIZE_MAX)  size = (int)SSIZE_MAX;  /* SSIZE_MAX is defined in limits.h */
 #else
   if(size>4096)  size = 4096;
 #endif
@@ -101,19 +102,15 @@ int kfx::RS232::Read(unsigned char *buf, int size)
   return read(port, buf, size);
 }
 
-
 int kfx::RS232::Write(unsigned char byte)
 {
-  int n = write(port, &byte, 1);
-  return n<0? 1 : 0;
+  return write(port, &byte, 1);
 }
-
 
 int kfx::RS232::Write(unsigned char *buf, int size)
 {
   return write(port, buf, size);
 }
-
 
 void kfx::RS232::Close()
 {
@@ -136,6 +133,7 @@ TIOCM_RNG   RNG (ring)
 TIOCM_RI    Synonym for TIOCM_RNG
 TIOCM_DSR   DSR (data set ready)
 */
+
 int kfx::RS232::IsCTSEnabled()
 {
   int status;
