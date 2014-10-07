@@ -36,7 +36,9 @@ int OpenComport(int comport_number, int baudrate)
     printf("illegal comport number\n");
     return(1);
   }
-
+  for (int i = 0; i  < 13; i++)
+      if ( baudrate == valid_baudrates[i] )
+          break;
   switch(baudrate)
   {
     case     110 : strcpy(baudr, "baud=110 data=8 parity=N stop=1");

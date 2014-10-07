@@ -5,8 +5,7 @@
 
 int error;
 
-struct termios new_port_settings,
-       old_port_settings[22];
+struct termios nps;
 
 char comports[22][13] = {"/dev/ttyACM0", \
     "/dev/ttyS1", "/dev/ttyS2", "/dev/ttyS3", \
@@ -59,22 +58,22 @@ kfx::RS232::RS232(char * dev_name, int baudrate)
     return;
   }
 
-  error = tcgetattr(port, old_port_settings + comport_number);
+  error = tcgetattr(port, &ops);
   if(error == -1)
   {
     close(port);
     perror("unable to read portsettings ");
     return;
   }
-  memset(&new_port_settings, 0, sizeof(new_port_settings));  /* clear the new struct */
+  memset(&nps, 0, sizeof(nps));  /* clear the new struct */
 
-  new_port_settings.c_cflag = baudr | CS8 | CLOCAL | CREAD;
-  new_port_settings.c_iflag = IGNPAR;
-  new_port_settings.c_oflag = 0;
-  new_port_settings.c_lflag = 0;
-  new_port_settings.c_cc[VMIN] = 0;      /* block untill n bytes are received */
-  new_port_settings.c_cc[VTIME] = 0;     /* block untill a timer expires (n * 100 mSec.) */
-  error = tcsetattr(port, TCSANOW, &new_port_settings);
+  nps.c_cflag = baudr | CS8 | CLOCAL | CREAD;
+  nps.c_iflag = IGNPAR;
+  nps.c_oflag = 0;
+  nps.c_lflag = 0;
+  nps.c_cc[VMIN] = 0;      /* block untill n bytes are received */
+  nps.c_cc[VTIME] = 0;     /* block untill a timer expires (n * 100 mSec.) */
+  error = tcsetattr(port, TCSANOW, &nps);
   if(error == -1)
   {
     close(port);
@@ -85,6 +84,11 @@ kfx::RS232::RS232(char * dev_name, int baudrate)
   available = true;
 }
 
+
+int kfx::RS232::Read(unsigned char byte)
+{
+  return read(port, &byte, 1);
+}
 
 int kfx::RS232::Read(unsigned char *buf, int size)
 {
@@ -111,13 +115,10 @@ int kfx::RS232::Write(unsigned char *buf, int size)
 }
 
 
-void kfx::RS232::Close(int comport_number)
+void kfx::RS232::Close()
 {
   close(port);
-  tcsetattr(port, TCSANOW, old_port_settings + comport_number);
-  // ¿ Qué es (old_port_settings + comport_number)?
-  // Es la posición de memoria donde se encuetra el
-  // "termios" para un determinado objeto de RS232.
+  tcsetattr(port, TCSANOW, &ops);
 }
 
 /*
