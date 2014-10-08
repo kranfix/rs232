@@ -15,64 +15,32 @@
 
 #include "rs232.h"
 
-HANDLE Cport[16];
-
-
-char comports[16][10]={"\\\\.\\COM1",  "\\\\.\\COM2",  "\\\\.\\COM3",  "\\\\.\\COM4",
-                       "\\\\.\\COM5",  "\\\\.\\COM6",  "\\\\.\\COM7",  "\\\\.\\COM8",
-                       "\\\\.\\COM9",  "\\\\.\\COM10", "\\\\.\\COM11", "\\\\.\\COM12",
-                       "\\\\.\\COM13", "\\\\.\\COM14", "\\\\.\\COM15", "\\\\.\\COM16"};
-
 static int valid_baudrates[] = {110, 300, 600, 1200, 2400, 4800,
         9600, 19200, 38400, 57600, 115200, 128000, 256000};
 
-char baudr[64];
-
-
-int OpenComport(int comport_number, int baudrate)
+int kfx_RS232_Init(kfx_RS232 * h, char * dev_name, int baudrate)
 {
-  if((comport_number>15)||(comport_number<0))
+  // Device name
+  strcpy(h->devname,dev_name);
+
+  // Looks for a valid baurate
+  int i;
+  for (i = 0; i  < 13 && baudrate == valid_baudrates[i]; i++)
+    break;
+
+  char baudr_conf[64];
+  if (i < 13)
   {
-    printf("illegal comport number\n");
-    return(1);
+    h->baudr = baudrate;
+    sprintf(baudr_conf, "baud=%d data=8 parity=N stop=1",baudrate);
   }
-  for (int i = 0; i  < 13; i++)
-      if ( baudrate == valid_baudrates[i] )
-          break;
-  switch(baudrate)
+  else
   {
-    case     110 : strcpy(baudr, "baud=110 data=8 parity=N stop=1");
-                   break;
-    case     300 : strcpy(baudr, "baud=300 data=8 parity=N stop=1");
-                   break;
-    case     600 : strcpy(baudr, "baud=600 data=8 parity=N stop=1");
-                   break;
-    case    1200 : strcpy(baudr, "baud=1200 data=8 parity=N stop=1");
-                   break;
-    case    2400 : strcpy(baudr, "baud=2400 data=8 parity=N stop=1");
-                   break;
-    case    4800 : strcpy(baudr, "baud=4800 data=8 parity=N stop=1");
-                   break;
-    case    9600 : strcpy(baudr, "baud=9600 data=8 parity=N stop=1");
-                   break;
-    case   19200 : strcpy(baudr, "baud=19200 data=8 parity=N stop=1");
-                   break;
-    case   38400 : strcpy(baudr, "baud=38400 data=8 parity=N stop=1");
-                   break;
-    case   57600 : strcpy(baudr, "baud=57600 data=8 parity=N stop=1");
-                   break;
-    case  115200 : strcpy(baudr, "baud=115200 data=8 parity=N stop=1");
-                   break;
-    case  128000 : strcpy(baudr, "baud=128000 data=8 parity=N stop=1");
-                   break;
-    case  256000 : strcpy(baudr, "baud=256000 data=8 parity=N stop=1");
-                   break;
-    default      : printf("invalid baudrate\n");
-                   return(1);
-                   break;
+    printf("invalid baudrate\n");
+    return 1;
   }
 
-  Cport[comport_number] = CreateFileA(comports[comport_number],
+  h->Cport = CreateFileA(h->devname,
                       GENERIC_READ|GENERIC_WRITE,
                       0,                          /* no share  */
                       NULL,                       /* no security */
@@ -80,28 +48,28 @@ int OpenComport(int comport_number, int baudrate)
                       0,                          /* no threads */
                       NULL);                      /* no templates */
 
-  if(Cport[comport_number]==INVALID_HANDLE_VALUE)
+  if(h->Cport == INVALID_HANDLE_VALUE)
   {
     printf("unable to open comport\n");
-    return(1);
+    return 1;
   }
 
   DCB port_settings;
   memset(&port_settings, 0, sizeof(port_settings));  /* clear the new struct  */
   port_settings.DCBlength = sizeof(port_settings);
 
-  if(!BuildCommDCBA(baudr, &port_settings))
+  if(!BuildCommDCBA(baudr_conf, &port_settings))
   {
     printf("unable to set comport dcb settings\n");
-    CloseHandle(Cport[comport_number]);
+    CloseHandle(h->Cport);
     return(1);
   }
 
-  if(!SetCommState(Cport[comport_number], &port_settings))
+  if(!SetCommState(h->Cport, &port_settings))
   {
     printf("unable to set comport cfg settings\n");
-    CloseHandle(Cport[comport_number]);
-    return(1);
+    CloseHandle(h->Cport);
+    return 1;
   }
 
   COMMTIMEOUTS Cptimeouts;
@@ -112,18 +80,24 @@ int OpenComport(int comport_number, int baudrate)
   Cptimeouts.WriteTotalTimeoutMultiplier = 0;
   Cptimeouts.WriteTotalTimeoutConstant   = 0;
 
-  if(!SetCommTimeouts(Cport[comport_number], &Cptimeouts))
+  if(!SetCommTimeouts(h->Cport, &Cptimeouts))
   {
     printf("unable to set comport time-out settings\n");
-    CloseHandle(Cport[comport_number]);
+    CloseHandle(h->Cport);
     return(1);
   }
 
   return(0);
 }
 
+int kfx_RS232_ReadByte(kfx_RS232 * h, unsigned char byte)
+{
+  int n;
+  ReadFile(h->Cport, byte, 1, (LPDWORD)((void *)&n), NULL);
+  return n;
+}
 
-int PollComport(int comport_number, unsigned char *buf, int size)
+int kfx_RS232_ReadBuf(kfx_RS232 * h, unsigned char *buf, int size)
 {
   int n;
 
@@ -132,29 +106,23 @@ int PollComport(int comport_number, unsigned char *buf, int size)
 /* added the void pointer cast, otherwise gcc will complain about */
 /* "warning: dereferencing type-punned pointer will break strict aliasing rules" */
 
-  ReadFile(Cport[comport_number], buf, size, (LPDWORD)((void *)&n), NULL);
+  ReadFile(h->Cport, buf, size, (LPDWORD)((void *)&n), NULL);
 
-  return(n);
+  return n;
 }
 
+int kfx_RS232_WriteByte(int comport_number, unsigned char byte)
+{
+  int n;
+  WriteFile(h->Cport, &byte, 1, (LPDWORD)((void *)&n), NULL);
+  return (n < 0)? 1 : 0;
+}
 
-int SendByte(int comport_number, unsigned char byte)
+int kfx_RS232_WriteBuf(kfx_RS232 * h, unsigned char * buf, int size)
 {
   int n;
 
-  WriteFile(Cport[comport_number], &byte, 1, (LPDWORD)((void *)&n), NULL);
-
-  if(n<0)  return(1);
-
-  return(0);
-}
-
-
-int SendBuf(int comport_number, unsigned char *buf, int size)
-{
-  int n;
-
-  if(WriteFile(Cport[comport_number], buf, size, (LPDWORD)((void *)&n), NULL))
+  if(WriteFile(h->Cport, buf, size, (LPDWORD)((void *)&n), NULL))
   {
     return(n);
   }
@@ -162,21 +130,16 @@ int SendBuf(int comport_number, unsigned char *buf, int size)
   return(-1);
 }
 
-
-void CloseComport(int comport_number)
+void kfx_RS232_Close(kfx_RS232 * h)
 {
-  CloseHandle(Cport[comport_number]);
+  CloseHandle(h->Cport);
 }
 
-
-int IsCTSEnabled(int comport_number)
+int kfx_RS232_IsCTSEnabled(kfx_RS232 * h)
 {
   int status;
-
-  GetCommModemStatus(Cport[comport_number], (LPDWORD)((void *)&status));
-
-  if(status&MS_CTS_ON) return(1);
-  else return(0);
+  GetCommModemStatus(h->Cport, (LPDWORD)((void *)&status));
+  return (status & MS_CTS_ON)? 1 : 0;
 }
 
 #endif // RS232_WIN_C

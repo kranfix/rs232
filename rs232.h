@@ -13,6 +13,9 @@
 #ifndef RS232_H
 #define RS232_H
 
+//#undef __cplusplus
+#undef __linux__
+
 #include <stdio.h>
 #include <string.h>
 
@@ -81,7 +84,11 @@ typedef struct __kfx_RS232 {
     char name[13];
     int baudr, port; // Baudrate and Port Number
     bool available = false;
+#  ifdef __linux__
     struct termios ops;
+#  else
+    HANDLE Cport;
+#  endif
 } kfx_RS232;
 
 #  ifdef __linux__

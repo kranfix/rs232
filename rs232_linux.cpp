@@ -133,7 +133,6 @@ TIOCM_RNG   RNG (ring)
 TIOCM_RI    Synonym for TIOCM_RNG
 TIOCM_DSR   DSR (data set ready)
 */
-
 int kfx::RS232::IsCTSEnabled()
 {
   int status;

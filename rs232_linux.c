@@ -107,7 +107,6 @@ int kfx_RS232_WriteByte(kfx_RS232 * h, unsigned char byte)
   return write(h->port, &byte, 1);
 }
 
-
 int kfx_RS232_WriteBuf(kfx_RS232 * h, unsigned char *buf, int size)
 {
   return write(h->port, buf, size);
@@ -133,7 +132,6 @@ TIOCM_RNG RNG (ring)
 TIOCM_RI  Synonym for TIOCM_RNG
 TIOCM_DSR DSR (data set ready)
 */
-
 int kfx_RS232_IsCTSEnabled(kfx_RS232 * h)
 {
   int status;
