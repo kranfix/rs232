@@ -13,9 +13,6 @@
 #ifndef RS232_H
 #define RS232_H
 
-//#undef __cplusplus
-#undef __linux__
-
 #include <stdio.h>
 #include <string.h>
 
