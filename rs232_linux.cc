@@ -10,17 +10,17 @@
 ***********************************************
 */
 
-#ifndef RS232_LINUX_CPP
-#define RS232_LINUX_CPP
+#ifndef kranfix_rs2323_rs232_linux_cc
+#define kranfix_rs2323_rs232_linux_cc
 
 #include "rs232.h"
 
 static int error;
 static struct termios nps;
 
-kfx::RS232::RS232(char * dev_name, int baudrate)
+kfx::RS232::RS232(char * dev_name, int baudrate) : available(false)
 {
-  // asigninn device name
+  // asigning device name
   strcpy(devname,dev_name);
 
   // Chossing baudrate
@@ -140,4 +140,4 @@ int kfx::RS232::IsCTSEnabled()
   return (status & TIOCM_CTS)? 1 : 0;
 }
 
-#endif // RS232_LINUX_CPP
+#endif // kranfix_rs2323_rs232_linux_cc
