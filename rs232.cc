@@ -10,11 +10,12 @@
 ***********************************************
 */
 
-#ifndef RS232_CPP
-#define RS232_CPP
+#ifndef kranfix_rs232_rs232_cc
+#define kranfix_rs232_rs232_cc
 
 #include "rs232.h"
 
+// Only for testing purpouse
 //#undef __cplusplus
 //#undef __linux__
 
@@ -32,10 +33,10 @@ void kfx_rs232_Print(kfx_RS232 * h, const char *text)  /* sends a string to seri
 
 #else
 #  ifdef __linux__
-#    include "rs232_linux.cpp"
+#    include "rs232_linux.cc"
 #  else
-#    include "rs232_win.cpp"
-#endif // __linux__
+#    include "rs232_win.cc"
+#  endif // __linux__
 
 // Sends a string to serial port till finding a '\0'
 void kfx::RS232::Print(const char *text)
@@ -45,4 +46,4 @@ void kfx::RS232::Print(const char *text)
 
 #endif // __cplusplus
 
-#endif // RS232_CPP
+#endif // kranfix_rs232_rs232_cc
