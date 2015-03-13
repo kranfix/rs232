@@ -3,3 +3,7 @@
 void TestLinuxC()
 {
 }
+
+int main () {
+  return 0;
+}

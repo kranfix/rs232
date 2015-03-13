@@ -5,7 +5,7 @@
 *
 * Copyright (C) 2014 Frank Andre Moreno Vera
 *
-* frankmoreno1993@gmail.com
+* frank.moreno@geckotronics.pe
 *
 ***********************************************
 */
@@ -25,6 +25,8 @@
 #  else
 #    include "rs232_win.c"
 #  endif
+
+int kfx_RS232_IsAvailable(kfx_RS232 * h) { return h->available; }
 
 void kfx_rs232_Print(kfx_RS232 * h, const char *text)  /* sends a string to serial port */
 {

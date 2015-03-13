@@ -18,8 +18,7 @@
 static int error;
 static struct termios nps;
 
-int kfx_RS232_Init(RS232 * h, char const * dev_name, int baudrate) //(int comport_number, int baudrate)
-{
+int kfx_RS232_Init(RS232 * h, char const * dev_name, int baudrate) {
     // asigninn device name
     strcpy(h->devname,dev_name);
 
@@ -86,7 +85,7 @@ int kfx_RS232_Init(RS232 * h, char const * dev_name, int baudrate) //(int compor
     h->available = true;
 }
 
-int kfx_RS232_ReadBuf(kfx_RS232 * h, unsigned char byte)
+int kfx_RS232_ReadByte(kfx_RS232 * h, unsigned char byte)
 {
   return read(h->port, &byte, 1);
 }
