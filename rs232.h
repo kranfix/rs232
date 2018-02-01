@@ -5,7 +5,7 @@
 *
 * Copyright (C) 2014 Frank Andre Moreno Vera
 *
-* frank.moreno@geckotronics.pe
+* frank@ariot.pe
 *
 ***********************************************
 */
@@ -79,7 +79,7 @@ public:
 
 // Private tipe
 typedef struct kfx_RS232 {
-    char name[13];
+    char devname[13];
     int baudr, port; // Baudrate and Port Number
     int available;
 #  ifdef __linux__
@@ -88,8 +88,8 @@ typedef struct kfx_RS232 {
     HANDLE Cport;
 #  endif
 } kfx_RS232;
-/*
-#  ifdef __linux__
+
+/*#  ifdef __linux__
     extern const char kfx_RS232_Comports[22][13] = {"/dev/ttyACM0", \
         "/dev/ttyS1", "/dev/ttyS2", "/dev/ttyS3", \
         "/dev/ttyS4", "/dev/ttyS5", "/dev/ttyS6", \
@@ -105,8 +105,8 @@ typedef struct kfx_RS232 {
         "\\\\.\\COM8", "\\\\.\\COM9",  "\\\\.\\COM10",
         "\\\\.\\COM11", "\\\\.\\COM12", "\\\\.\\COM13",
         "\\\\.\\COM14", "\\\\.\\COM15", "\\\\.\\COM16"};
-#endif
-*/
+#endif*/
+
 int kfx_RS232_Init(kfx_RS232 *, char *, int);
 int kfx_RS232_IsAvailable(kfx_RS232 * h);
 int kfx_RS232_ReadByte(kfx_RS232 *, unsigned char);

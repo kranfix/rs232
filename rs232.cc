@@ -5,7 +5,7 @@
 *
 * Copyright (C) 2014 Frank Andre Moreno Vera
 *
-* frank.moreno@geckotronics.pe
+* frank@ariot.pe
 *
 ***********************************************
 */

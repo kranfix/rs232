@@ -18,8 +18,8 @@
 static int error;
 static struct termios nps;
 
-int kfx_RS232_Init(RS232 * h, char const * dev_name, int baudrate) {
-    // asigninn device name
+int kfx_RS232_Init(kfx_RS232 * h, char * dev_name, int baudrate) {
+    // asigning device name
     strcpy(h->devname,dev_name);
 
     // Chossing baudrate
@@ -49,14 +49,14 @@ int kfx_RS232_Init(RS232 * h, char const * dev_name, int baudrate) {
       case  921600 : h->baudr = B921600;   break;
       case 1000000 : h->baudr = B1000000;  break;
       default      : printf("invalid baudrate\n");
-                     return;
+                     return 0;
     }
 
     h->port = open(h->devname, O_RDWR | O_NOCTTY | O_NDELAY);
-    if(port == -1)
+    if(h->port == -1)
     {
       perror("unable to open comport ");
-      return;
+      return 0;
     }
 
     error = tcgetattr(h->port, &(h->ops) );
@@ -64,11 +64,11 @@ int kfx_RS232_Init(RS232 * h, char const * dev_name, int baudrate) {
     {
       close(h->port);
       perror("unable to read portsettings ");
-      return;
+      return 0;
     }
     memset(&nps, 0, sizeof(nps));  /* clear the new struct */
 
-    nps.c_cflag = baudr | CS8 | CLOCAL | CREAD;
+    nps.c_cflag = h->baudr | CS8 | CLOCAL | CREAD;
     nps.c_iflag = IGNPAR;
     nps.c_oflag = 0;
     nps.c_lflag = 0;
@@ -79,10 +79,11 @@ int kfx_RS232_Init(RS232 * h, char const * dev_name, int baudrate) {
     {
       close(h->port);
       perror("unable to adjust portsettings ");
-      return;
+      return 0;
     }
 
-    h->available = true;
+    h->available = 1; // true
+    return h->available;
 }
 
 int kfx_RS232_ReadByte(kfx_RS232 * h, unsigned char byte)
