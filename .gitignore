@@ -7,7 +7,7 @@
 *.dll
 
 # Build Directory
-./.build
+.build
 
 # Qt-crator project
 *.pro*
