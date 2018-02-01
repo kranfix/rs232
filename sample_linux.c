@@ -24,7 +24,8 @@ int main () {
   puts(buf);
 
   // Closing port
+  puts("\nClosing Serialport ...");
   kfx_RS232_Close(&h);
-  
+
   return 0;
 }

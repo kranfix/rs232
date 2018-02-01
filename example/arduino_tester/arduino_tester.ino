@@ -3,6 +3,7 @@
 void setup() {
   Serial.begin(baudr);
 }
+
 void loop() {
   while(!Serial.available());
 
@@ -20,7 +21,6 @@ void loop() {
   // Testing kfx::RS232::WriteBuf
   char A[80];
   int cont = 0;
-  waitForIncomingBuffer:
   while(!Serial.available());
   while(Serial.available()){
     A[cont] = Serial.read();
